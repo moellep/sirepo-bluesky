@@ -110,6 +110,7 @@ class SirepoFlyer(BlueskyFlyer):
         self._watch_name = watch_name
         self._run_parallel = run_parallel
         self.return_status = {}
+        self.return_data_file = {}
         self.return_duration = {}
         self._copies = None
         self._srw_files = None
@@ -260,12 +261,13 @@ class SirepoFlyer(BlueskyFlyer):
             manager = Manager()
             self.return_status = manager.dict()
             self.return_duration = manager.dict()
+            self.return_data_file = manager.dict()
             self.procs = []
 
             for i in range(self.copy_count):
                 p = Process(
                     target=self._run,
-                    args=(self._copies[i], self.return_status, self.return_duration),
+                    args=(self._copies[i], self.return_status, self.return_duration, self.return_data_file),
                 )
                 p.start()
                 self.procs.append(p)
@@ -377,6 +379,9 @@ class SirepoFlyer(BlueskyFlyer):
         vertical_extents = []
         hash_values = []
         for i in range(len(self._copies)):
+            if self._copies[i].sim_id in self.return_data_file:
+                # restore data_file attribute from subprocess results
+                self._copies[i].data_file = self.return_data_file[self._copies[i].sim_id]
             data_file = self._copies[i].get_datafile()
             with open(self._srw_files[i], "wb") as f:
                 f.write(data_file)
@@ -434,10 +439,11 @@ class SirepoFlyer(BlueskyFlyer):
             }
 
     @staticmethod
-    def _run(sim, return_status, return_duration):
+    def _run(sim, return_status, return_duration, return_data_file):
         """Run simulations using multiprocessing."""
         print(f"running sim {sim.sim_id}")
         status, duration = sim.run_simulation()
         print(f"Status of sim {sim.sim_id}: {status['state']} in {duration:.01f} seconds")
         return_status[sim.sim_id] = status["state"]
         return_duration[sim.sim_id] = duration
+        return_data_file[sim.sim_id] = sim.data_file

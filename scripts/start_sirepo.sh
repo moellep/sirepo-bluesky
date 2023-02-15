@@ -41,7 +41,7 @@ else
 fi
 
 # docker_image="radiasoft/sirepo:beta"
-docker_image="radiasoft/sirepo:20220806.215448"
+docker_image="radiasoft/sirepo"
 docker_binary=${DOCKER_BINARY:-"docker"}
 
 ${docker_binary} pull ${docker_image}
@@ -60,6 +60,7 @@ cmd_start="${docker_binary} run ${arg} --init ${remove_container} --name sirepo 
     -e SIREPO_AUTH_BLUESKY_SECRET=bluesky \
     -e SIREPO_SRDB_ROOT=${SIREPO_SRDB_ROOT} \
     -e SIREPO_COOKIE_IS_SECURE=false \
+    -e SIREPO_PKCLI_SERVICE_REACT_PORT='' \
     -p 8000:8000 \
     -v $PWD/sirepo_bluesky/tests/SIREPO_SRDB_ROOT:/SIREPO_SRDB_ROOT:ro,z "
 

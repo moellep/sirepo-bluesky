@@ -80,6 +80,7 @@ class SirepoBluesky(object):
         self.sim_id = sim_id
         self.schema = res["schema"]
         self.data = res["data"]
+        self.data_file = None
         return self.data, self.schema
 
     def copy_sim(self, sim_name):
@@ -101,6 +102,7 @@ class SirepoBluesky(object):
         copy.sim_id = res["models"]["simulation"]["simulationId"]
         copy.schema = self.schema
         copy.data = res
+        copy.data_file = None
         copy.is_copy = True
         return copy
 
@@ -155,6 +157,8 @@ class SirepoBluesky(object):
         """
         if not hasattr(self, "cookies"):
             raise Exception("must call auth() before get_datafile()")
+        if self.data_file and self.data_file.get(file_index):
+            return self.data_file[file_index]
         url = f"download-data-file/{self.sim_type}/{self.sim_id}/{self.data['report']}/{file_index}"
         response = requests.get(f"{self.server}/{url}", cookies=self.cookies)
         self._assert_success(response, url)
@@ -183,7 +187,7 @@ class SirepoBluesky(object):
         grazing_params["normalVectorZ"] = nvz
         data_to_update.update(grazing_params)
 
-    def run_simulation(self, max_status_calls=1000):
+    def run_simulation(self, max_status_calls=1000, file_index=-1):
         """Run the sirepo simulation and returns the formatted plot data.
 
         Parameters
@@ -198,29 +202,31 @@ class SirepoBluesky(object):
             raise Exception("call auth() before run_simulation()")
         if "report" not in self.data:
             raise Exception("client needs to set data['report']")
+        self.data_file = {}
         self.data["simulationId"] = self.sim_id
         self.data["forceRun"] = True
-        res = self._post_json("run-simulation", self.data)
-        for _ in range(max_status_calls):
-            state = res["state"]
-            if state == "completed" or state == "error":
-                break
-            if "nextRequestSeconds" not in res:
-                raise Exception(f'missing "nextRequestSeconds" in response: {res}')
-            time.sleep(res["nextRequestSeconds"])
-            res = self._post_json("run-status", res["nextRequest"])
-        if not state == "completed":
-            raise SirepoBlueskyClientException(f"simulation failed to complete: {state}")
-        return res, time.monotonic() - start_time
+        self.data["jobRunMode"] = "sequential"
+        self.data["fileIndex"] = file_index
+        self.data_file[file_index] = self._post_json(
+            "run-simulation-bluesky",
+            self.data,
+            want_content=True,
+        )
+        if not self.data_file[file_index]:
+            raise SirepoBlueskyClientException(f"simulation failed to complete")
+        return {"state": "complete"}, time.monotonic() - start_time
 
     @staticmethod
     def _assert_success(response, url):
         if not response.status_code == requests.codes.ok:
             raise SirepoBlueskyClientException(f"{url} request failed, status: {response.status_code}")
 
-    def _post_json(self, url, payload):
+    def _post_json(self, url, payload, want_content=False):
         response = requests.post(f"{self.server}/{url}", json=payload, cookies=self.cookies)
         self._assert_success(response, url)
         if not self.cookies:
             self.cookies = response.cookies
+        #TODO(pjm): if want_content, check that attachment is present otherwise an error
+        if want_content:
+            return response.content
         return response.json()

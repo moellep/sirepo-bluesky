@@ -33,7 +33,7 @@ class MADXFlyer(BlueskyFlyer):
     def kickoff(self):
         self.connection.data["report"] = self.report
         self.connection.data["forceRun"] = True
-        res, elapsed_time = self.connection.run_simulation()
+        res, elapsed_time = self.connection.run_simulation(file_index=0)
         datafile = self.connection.get_datafile(file_index=0)
 
         date = datetime.datetime.now()

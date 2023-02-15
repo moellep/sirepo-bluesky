@@ -2,7 +2,10 @@
     "models": {
         "beamStatisticsReport": {
             "driftDivisions": 100,
-            "epsilon": 1e-06,
+            "epsilon": 1e-05,
+            "includeApertures": "1",
+            "k_apert_x": 0.62,
+            "k_apert_y": 0.62,
             "notes": "",
             "y1": "sigmax",
             "y2": "sigmaz",
@@ -529,14 +532,15 @@
         },
         "simulation": {
             "documentationUrl": "",
-            "folder": "/TES",
+            "folder": "/Beamline Examples",
+            "isExample": true,
             "istar1": 567656,
-            "lastModified": 1639159814414,
-            "name": "TES (from SRW)",
+            "lastModified": 1675454877362,
+            "name": "NSLS-II TES beamline (from SRW)",
             "notes": "",
             "npoint": 100000,
-            "simulationId": "00000002",
-            "simulationSerial": 1639159814410583,
+            "simulationId": "iKNa0t3V",
+            "simulationSerial": 1675454877361390,
             "sourceType": "bendingMagnet"
         },
         "sourceDivergence": {
@@ -623,18 +627,6 @@
             "trajFile": "SW_3P.txt"
         }
     },
-    "rsmanifest": {
-        "image": {
-            "git_commit": "a8b1ef5210b2f2595e3182f8676d321148d04004",
-            "git_remote_origin_url": "https://github.com/radiasoft/sirepo",
-            "name": "radiasoft/sirepo",
-            "type": "docker",
-            "uri": "https://registry.hub.docker.com/radiasoft/sirepo:20211123.203943",
-            "version": "20211123.203943"
-        },
-        "version": "20190612.150000"
-    },
     "simulationType": "shadow",
-    "state": "completed",
-    "version": "20211123.165730"
+    "version": "1675454848.7184687"
 }
